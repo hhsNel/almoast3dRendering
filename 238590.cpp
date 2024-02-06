@@ -4,8 +4,9 @@
 #include <cmath>
 #include <conio.h>
 #include <windows.h>
-//#include <stdlib.h>
-//#include <time.h>
+#include <cstdlib>
+#include <stdlib.h>
+#include <time.h>
 
 using namespace std;
 
@@ -137,27 +138,20 @@ void randomizeVerts(){
   int c;
   
   srand(time(NULL));
+  
   c = rand()%7 + 1;
   verts[0] = Vert(0, 0, 0, mapH, c);
-  srand(time(NULL) + 1);
   c = rand()%7 + 1;
   verts[1] = Vert(0, mapH, mapW, mapH, c);
-  srand(time(NULL) + 2);
   c = rand()%7 + 1;
   verts[2] = Vert(mapW, mapH, mapW, 0, c);
-  srand(time(NULL) + 3);
   c = rand()%7 + 1;
   verts[3] = Vert(mapW, 0, 0, 0, c);
   for(int v = 4; v < vertN; v++){
-    srand(time(NULL) + 4 + v*5);
     double x1 = rand()%(mapW - 2) + 1;
-    srand(time(NULL) + 505986455 + v*5);
     double y1 = rand()%(mapH - 2) + 1;
-    srand(time(NULL) + 61957674 + v*5);
     double x2 = rand()%(mapW - 2) + 1;
-    srand(time(NULL) + 7452 + v*5);
     double y2 = rand()%(mapH - 2) + 1;
-    srand(time(NULL) + 837656764 + v*5);
     c = rand()%7 + 1;
     verts[v] = Vert(x1, y1, x2, y2, c);
   }
@@ -213,7 +207,7 @@ void display3DAscii(){
   }
 }
 
-int main(){
+/*int main(){
   //srand(time(NULL));
   
   randomizeVerts();
@@ -242,4 +236,4 @@ int main(){
   }
   
   getch();
-}
+}*/

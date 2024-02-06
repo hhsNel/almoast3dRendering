@@ -1,5 +1,7 @@
 #include <iostream>
 
+#include <cmath>
+#define RAY_STEP 0.01
 namespace almoast3dRendering{
 	class coloredChar {
 		public:
@@ -27,6 +29,7 @@ namespace almoast3dRendering{
 			mapElement*** elements;
 		public:
 			typedef unsigned int wh_t;
+			typedef long double wh_subi_t;
 			wh_t width, height;
 			map() : width(0), height(0) {};
 			map(wh_t w, wh_t h);
@@ -75,29 +78,61 @@ namespace almoast3dRendering{
 	class map::renderer {
 			map* thisMap;
 			double degToRad(unsigned int deg) {return (double)deg * 3.14159265359 / 180;};
+		protected:
+			class ray {
+					map::wh_subi_t x, y, deltaX, deltaY;
+					void setAngle(double angleRad) {
+						this->deltaX = cos(angleRad);
+						this->deltaY = sin(angleRad);
+					};
+				public:
+					ray(map::wh_subi_t sx, map::wh_subi_t sy, double angleRad, double step) : x(sx), y(sy) {
+						this->setAngle(angleRad);
+						this->deltaX *= step;
+						this->deltaY *= step;
+					}
+					void step() {
+						this->x += this->deltaX;
+						this->y += this->deltaY;
+					}
+					
+					friend map::renderer;
+			};
+			mapElement* checkOverlap(ray r) {
+				if(this->thisMap->elements[(wh_t)r.y][(wh_t)r.y]->seeThroughable) return this->thisMap->elements[(wh_t)r.y][(wh_t)r.y];
+				return NULL;
+			}
 		public:
 			renderer(map* ThisMap) : thisMap(ThisMap) {};
-			coloredChar** render(wh_t const x, wh_t const y, wh_t const width, wh_t const height, unsigned int rotationDeg, unsigned short int FOVDeg);
+			coloredChar** render(wh_subi_t const x, wh_subi_t const y, wh_t const width, wh_t const height, unsigned int rotationDeg, unsigned short int FOVDeg);
 	};
-	coloredChar** map::renderer::render(wh_t const x, wh_t const y, wh_t const width, wh_t const height, unsigned int rotationDeg, unsigned short int FOVDeg) {
+	coloredChar** map::renderer::render(wh_subi_t const x, wh_subi_t const y, wh_t const width, wh_t const height, unsigned int rotationDeg, unsigned short int FOVDeg) {
 		coloredChar** screen = new coloredChar*[width];
 		unsigned int FOVStartDeg = (rotationDeg - FOVDeg/2 + 360)%360, FOVEndDeg = (rotationDeg + FOVDeg/2) % 360;
 		double delta = (FOVStartDeg - FOVEndDeg) / width;
 		
 		double currentFOV;
-		mapElement hitTarget;
+		mapElement* hitTarget;
 		unsigned short int startY, endY;
 		for(unsigned int i = 0; i < width; ++i) {
 			screen[i] = new coloredChar[height];
 			
-			currentFOV = this->degToRad((double)FOVStartDeg + delta*i);
+			currentFOV = this->degToRad((double)FOVStartDeg + delta*i);\
+			
 			// do tha Ray Tracing Pro 2D Gamer stuff here
 			// and save the first encountered mapElement with seeThroughable set to false in hitTarget
-			startY = height/2 - hitTarget.texture.height / 2;
-			endY = height/2 + hitTarget.texture.height / 2 + (hitTarget.texture.height%2);
+			ray r = ray(x, y, currentFOV, RAY_STEP);
+			hitTarget = NULL;
+			while(hitTarget == NULL) {
+				hitTarget = this->checkOverlap(r);
+				r.step();
+			}
+			
+			startY = height/2 - hitTarget->texture.height / 2;
+			endY = height/2 + hitTarget->texture.height / 2 + (hitTarget->texture.height%2);
 			for(unsigned short int j = 0; j < height; ++j) {
 				if(j < startY || j > endY) screen[j][i] = coloredChar();
-				else screen[j][i] = hitTarget.texture.texture[j - startY];
+				else screen[j][i] = hitTarget->texture.texture[j - startY];
 			}
 		}
 		
