@@ -99,15 +99,17 @@ namespace almoast3dRendering{
 					friend map::renderer;
 			};
 			mapElement* checkOverlap(ray r) {
-				if(this->thisMap->elements[(wh_t)r.y][(wh_t)r.y]->seeThroughable) return this->thisMap->elements[(wh_t)r.y][(wh_t)r.y];
-				return NULL;
+				if(this->thisMap->elements[(wh_t)r.y][(wh_t)r.y]->seeThroughable) return NULL;
+				return this->thisMap->elements[(wh_t)r.y][(wh_t)r.y];
 			}
 		public:
 			renderer(map* ThisMap) : thisMap(ThisMap) {};
 			coloredChar** render(wh_subi_t const x, wh_subi_t const y, wh_t const width, wh_t const height, unsigned int rotationDeg, unsigned short int FOVDeg);
 	};
 	coloredChar** map::renderer::render(wh_subi_t const x, wh_subi_t const y, wh_t const width, wh_t const height, unsigned int rotationDeg, unsigned short int FOVDeg) {
-		coloredChar** screen = new coloredChar*[width];
+		coloredChar** screen = new coloredChar*[height];
+		for(wh_t i=0;i<height;++i) screen[i] = new coloredChar[width];
+		
 		unsigned int FOVStartDeg = (rotationDeg - FOVDeg/2 + 360)%360, FOVEndDeg = (rotationDeg + FOVDeg/2) % 360;
 		double delta = (FOVStartDeg - FOVEndDeg) / width;
 		
@@ -115,9 +117,7 @@ namespace almoast3dRendering{
 		mapElement* hitTarget;
 		unsigned short int startY, endY;
 		for(unsigned int i = 0; i < width; ++i) {
-			screen[i] = new coloredChar[height];
-			
-			currentFOV = this->degToRad((double)FOVStartDeg + delta*i);\
+			currentFOV = this->degToRad((double)FOVStartDeg + delta*i);
 			
 			// do tha Ray Tracing Pro 2D Gamer stuff here
 			// and save the first encountered mapElement with seeThroughable set to false in hitTarget
@@ -144,7 +144,23 @@ using namespace almoast3dRendering;
 
 #include <windows.h>
 int main(int argc, char** argv) {
-	  HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+	map roomMap = map(8,8);
+	map::renderer r2d = map::renderer(&roomMap);
+	coloredChar** screen = r2d.render(4,4,32,24,0,90);
+	
+	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+	for(int i=0;i<24;++i){
+		for(int j=0;j<32;++j){
+			SetConsoleTextAttribute(hConsole, screen[i][j].color);
+			std::cout << screen[i][j].character;
+		}
+		std::cout << '\n';
+		delete screen[i];
+	}
+	delete screen;
+	system("pause");
+	
+	  //HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
   // you can loop k higher to see more color choices
   for(int k = 1; k < 255; k++)
   {
